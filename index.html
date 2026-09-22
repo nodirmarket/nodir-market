@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NODIR MARKET — Aksessuarlar</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#0b0b0c;color:#f5f3ed}
+header{position:sticky;top:0;z-index:5;background:#0b0b0ceF;border-bottom:1px solid #272727;backdrop-filter:blur(10px)}
+nav{max-width:1100px;margin:auto;padding:18px 20px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:800;letter-spacing:2px}.logo b{color:#d8bd78}.links{display:flex;gap:18px}.links a{color:#ddd;text-decoration:none}
+.hero{max-width:1100px;margin:auto;padding:80px 20px 55px;display:grid;grid-template-columns:1.2fr .8fr;gap:30px;align-items:center}
+h1{font-size:clamp(42px,7vw,76px);line-height:.95;margin:0 0 18px}.gold{color:#d8bd78}.hero p{color:#bcbcbc;line-height:1.7}.btn{border:0;border-radius:10px;padding:13px 18px;background:#d8bd78;color:#111;font-weight:700;cursor:pointer}
+.hero-card{min-height:280px;border:1px solid #3a3528;border-radius:28px;background:linear-gradient(145deg,#151515,#0e0e0e);display:grid;place-items:center;font-size:70px}
+section{max-width:1100px;margin:auto;padding:25px 20px 65px}h2{font-size:30px}.cats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}.cat{background:#171717;color:#ddd;border:1px solid #333;border-radius:999px;padding:9px 14px;cursor:pointer}.cat.active{background:#d8bd78;color:#111}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card{background:#131313;border:1px solid #2b2b2b;border-radius:16px;overflow:hidden}.pic{height:210px;background:#1d1d1d;display:grid;place-items:center;color:#777}.pic img{width:100%;height:100%;object-fit:cover}.body{padding:15px}.price{font-weight:800;color:#d8bd78;margin:8px 0 13px}.buy{width:100%;padding:11px;border:0;border-radius:9px;cursor:pointer;background:#f5f3ed;color:#111;font-weight:700}
+.cart{position:fixed;right:18px;bottom:18px;background:#d8bd78;color:#111;border:0;border-radius:50px;padding:14px 18px;font-weight:800;cursor:pointer;z-index:8}
+.modal{display:none;position:fixed;inset:0;background:#000a;z-index:20;align-items:center;justify-content:center;padding:15px}.box{width:min(560px,100%);max-height:90vh;overflow:auto;background:#121212;border:1px solid #333;border-radius:18px;padding:22px}.close{float:right;background:none;border:0;color:#fff;font-size:24px;cursor:pointer}
+input,textarea,select{width:100%;padding:12px;margin:7px 0 12px;border-radius:9px;border:1px solid #444;background:#0b0b0b;color:#fff}label{font-size:13px;color:#aaa}
+footer{text-align:center;padding:35px 20px;border-top:1px solid #222;color:#888}
+@media(max-width:800px){.hero{grid-template-columns:1fr;padding-top:50px}.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:480px){.grid{grid-template-columns:1fr}.links{display:none}}
+</style>
+</head>
+<body>
+<header><nav><div class="logo"><span>N</span><b>/</b><span>M</span> &nbsp; NODIR MARKET</div><div class="links"><a href="#products">Mahsulotlar</a><a href="#contact">Aloqa</a></div></nav></header>
+<div class="hero"><div><div class="gold">PREMIUM ACCESSORIES</div><h1>Sizning uslubingiz.<br><span class="gold">Sizning tanlovingiz.</span></h1><p>Soat, uzuk, bilaguzuk va zanjirlar. Mahsulotlarni tanlang va buyurtmani onlayn yuboring.</p><button class="btn" onclick="document.querySelector('#products').scrollIntoView()">Mahsulotlarni ko‘rish</button></div><div class="hero-card">N/M</div></div>
+<section id="products"><h2>Mahsulotlar</h2><div class="cats" id="cats"></div><div class="grid" id="grid"></div></section>
+<footer id="contact">© NODIR MARKET · Aloqa: telefon/Telegram ma'lumotini admin orqali sozlang.</footer>
+<button class="cart" onclick="openCart()">🛒 Savat <span id="count">0</span></button>
+<div class="modal" id="modal"><div class="box"><button class="close" onclick="closeCart()">×</button><h2>Savat</h2><div id="cartItems"></div><hr><p><b>Jami: <span id="total">0</span> so'm</b></p>
+<h3>Buyurtma berish</h3><label>Ism</label><input id="name"><label>Telefon</label><input id="phone" placeholder="+998 ..."><label>Manzil</label><textarea id="address"></textarea><label>To‘lov</label><select id="payment"><option>Naqd</option><option>Karta</option><option>Yetkazib berishda</option></select><button class="btn" onclick="sendOrder()">Buyurtma yuborish</button><p id="msg"></p></div></div>
+<script>
+let products=[],cart=JSON.parse(localStorage.getItem("nm_cart")||"[]"),filter="Barchasi";
+const money=n=>Number(n).toLocaleString("uz-UZ");
+async function load(){products=await fetch("/api/products").then(r=>r.json());renderCats();render();}
+function renderCats(){let cats=["Barchasi",...new Set(products.map(p=>p.category))];document.querySelector("#cats").innerHTML=cats.map(c=>`<button class="cat ${c===filter?"active":""}" onclick="filter='${c}';renderCats();render()">${c}</button>`).join("")}
+function render(){let arr=filter==="Barchasi"?products:products.filter(p=>p.category===filter);document.querySelector("#grid").innerHTML=arr.map(p=>`<article class="card"><div class="pic">${p.image?`<img src="${p.image}" alt="">`:"N/M"}</div><div class="body"><b>${esc(p.name)}</b><div class="price">${money(p.price)} so'm</div><button class="buy" onclick="add(${p.id})">Savatga qo‘shish</button></div></article>`).join("")}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function save(){localStorage.setItem("nm_cart",JSON.stringify(cart));document.querySelector("#count").textContent=cart.reduce((a,x)=>a+x.qty,0)}
+function add(id){let x=cart.find(x=>x.id===id);x?x.qty++:cart.push({id,qty:1});save();alert("Savatga qo‘shildi");}
+function openCart(){renderCart();document.querySelector("#modal").style.display="flex"}function closeCart(){document.querySelector("#modal").style.display="none"}
+function renderCart(){let rows=cart.map(x=>{let p=products.find(p=>p.id===x.id);return p?`<div style="display:flex;justify-content:space-between;margin:12px 0"><span>${esc(p.name)} × ${x.qty}</span><b>${money(p.price*x.qty)} so'm</b></div>`:""}).join("");document.querySelector("#cartItems").innerHTML=rows||"Savat bo‘sh.";let total=cart.reduce((a,x)=>{let p=products.find(p=>p.id===x.id);return a+(p?p.price*x.qty:0)},0);document.querySelector("#total").textContent=money(total)}
+async function sendOrder(){if(!cart.length)return alert("Savat bo‘sh.");let body={customer_name:document.querySelector("#name").value.trim(),phone:document.querySelector("#phone").value.trim(),address:document.querySelector("#address").value.trim(),payment:document.querySelector("#payment").value,items:cart};let r=await fetch("/api/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});let d=await r.json();if(!r.ok)return alert(d.error);cart=[];save();renderCart();document.querySelector("#msg").textContent="Buyurtmangiz qabul qilindi. №"+d.orderId}
+load();save();
+</script></body></html>
